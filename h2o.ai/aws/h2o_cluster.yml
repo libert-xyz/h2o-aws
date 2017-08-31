@@ -1,0 +1,374 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation H2O Template'
+Parameters:
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: String
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+
+  vmCount:
+    Description: Number of EC2 instances to deploy
+    Type: Number
+    Default: '1'
+
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  VPC:
+    Description: VPC must have internet access
+    Type: String
+
+  PublicSubnet:
+    Description: ''
+    Type: String
+
+Mappings:
+  AWSInstanceType2Arch:
+    t1.micro:
+      Arch: HVM64
+    t2.nano:
+      Arch: HVM64
+    t2.micro:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.medium:
+      Arch: HVM64
+    t2.large:
+      Arch: HVM64
+    m1.small:
+      Arch: HVM64
+    m1.medium:
+      Arch: HVM64
+    m1.large:
+      Arch: HVM64
+    m1.xlarge:
+      Arch: HVM64
+    m2.xlarge:
+      Arch: HVM64
+    m2.2xlarge:
+      Arch: HVM64
+    m2.4xlarge:
+      Arch: HVM64
+    m3.medium:
+      Arch: HVM64
+    m3.large:
+      Arch: HVM64
+    m3.xlarge:
+      Arch: HVM64
+    m3.2xlarge:
+      Arch: HVM64
+    m4.large:
+      Arch: HVM64
+    m4.xlarge:
+      Arch: HVM64
+    m4.2xlarge:
+      Arch: HVM64
+    m4.4xlarge:
+      Arch: HVM64
+    m4.10xlarge:
+      Arch: HVM64
+    c1.medium:
+      Arch: HVM64
+    c1.xlarge:
+      Arch: HVM64
+    c3.large:
+      Arch: HVM64
+    c3.xlarge:
+      Arch: HVM64
+    c3.2xlarge:
+      Arch: HVM64
+    c3.4xlarge:
+      Arch: HVM64
+    c3.8xlarge:
+      Arch: HVM64
+    c4.large:
+      Arch: HVM64
+    c4.xlarge:
+      Arch: HVM64
+    c4.2xlarge:
+      Arch: HVM64
+    c4.4xlarge:
+      Arch: HVM64
+    c4.8xlarge:
+      Arch: HVM64
+    g2.2xlarge:
+      Arch: HVMG2
+    g2.8xlarge:
+      Arch: HVMG2
+    r3.large:
+      Arch: HVM64
+    r3.xlarge:
+      Arch: HVM64
+    r3.2xlarge:
+      Arch: HVM64
+    r3.4xlarge:
+      Arch: HVM64
+    r3.8xlarge:
+      Arch: HVM64
+    r4.large:
+      Arch: HVM64
+    r4.xlarge:
+      Arch: HVM64
+    r4.2xlarge:
+      Arch: HVM64
+    r4.4xlarge:
+      Arch: HVM64
+    r4.8xlarge:
+      Arch: HVM64
+    r4.16xlarge:
+      Arch: HVM64
+    x1.16xlarge:
+      Arch: HVM64
+    x1.32xlarge:
+      Arch: HVM64
+    i2.xlarge:
+      Arch: HVM64
+    i2.2xlarge:
+      Arch: HVM64
+    i2.4xlarge:
+      Arch: HVM64
+    i2.8xlarge:
+      Arch: HVM64
+    x3.32xlarge:
+      Arch: HVM64
+    i3.xlarge:
+      Arch: HVM64
+    i3.2xlarge:
+      Arch: HVM64
+    i3.4xlarge:
+      Arch: HVM64
+    i3.8xlarge:
+      Arch: HVM64
+    i3.16xlarge:
+      Arch: HVM64
+    d2.xlarge:
+      Arch: HVM64
+    d2.2xlarge:
+      Arch: HVM64
+    d2.4xlarge:
+      Arch: HVM64
+    d2.8xlarge:
+      Arch: HVM64
+    hi1.4xlarge:
+      Arch: HVM64
+    hs1.8xlarge:
+      Arch: HVM64
+    cr1.8xlarge:
+      Arch: HVM64
+    cc2.8xlarge:
+      Arch: HVM64
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-bdf4c7c6
+    us-west-2:
+      HVM64: ami-bdf4c7c6
+    us-west-1:
+      HVM64: ami-bdf4c7c6
+    eu-west-1:
+      HVM64: ami-bdf4c7c6
+    eu-west-2:
+      HVM64: ami-bdf4c7c6
+    eu-central-1:
+      HVM64: ami-bdf4c7c6
+    ap-northeast-1:
+      HVM64: ami-bdf4c7c6
+    ap-northeast-2:
+      HVM64: ami-bdf4c7c6
+    ap-southeast-1:
+      HVM64: ami-bdf4c7c6
+    ap-southeast-2:
+      HVM64: ami-bdf4c7c6
+    ap-south-1:
+      HVM64: ami-bdf4c7c6
+    us-east-2:
+      HVM64: ami-bdf4c7c6
+    ca-central-1:
+      HVM64: ami-bdf4c7c6
+    sa-east-1:
+      HVM64: ami-bdf4c7c6
+    cn-north-1:
+      HVM64: ami-bdf4c7c6
+Resources:
+  H2OFleet:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn:
+    - TemplateInstanceProfile
+
+    Properties:
+      VPCZoneIdentifier:
+      - Ref: PublicSubnet
+      LaunchConfigurationName:
+        Ref: H2OLaunchConfig
+      MinSize:
+        Ref: vmCount
+      MaxSize:
+        Ref: vmCount
+      DesiredCapacity:
+        Ref: vmCount
+      Tags:
+      - Key: Network
+        Value: Public
+        PropagateAtLaunch: 'true'
+  H2OLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    DependsOn:
+    - TemplateInstanceProfile
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            "/opt/h2oai/create_flatfile.sh":
+              content:
+                Fn::Join:
+                - ''
+                - - "#!/bin/bash -xe\n"
+                  - "#Create Flatfile\n"
+                  - "touch /opt/h2oai/flatfile.txt\n"
+                  - "flatfile=\"/opt/h2oai/flatfile.txt\" \n "
+                  - "wget http://s3.amazonaws.com/ec2metadata/ec2-metadata \n"
+                  - "sudo chmod u+x ec2-metadata \n"
+                  - "INSTANCE_ID=$(./ec2-metadata | grep instance-id | awk 'NR==1{print
+                    $2}') \n"
+                  - AG_NAME=$(aws autoscaling describe-auto-scaling-instances --instance-ids
+                    ${INSTANCE_ID}
+                  - " --region "
+                  - Ref: AWS::Region
+                  - " --query AutoScalingInstances[].AutoScalingGroupName --output
+                    text) \n"
+                  - for ID in $(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names
+                    ${AG_NAME}
+                  - " --region "
+                  - Ref: AWS::Region
+                  - " --query AutoScalingGroups[].Instances[].InstanceId --output
+                    text); \n"
+                  - "do \n"
+                  - 'IP=$(aws ec2 describe-instances --instance-ids $ID '
+                  - "--region "
+                  - Ref: AWS::Region
+                  - " --query Reservations[].Instances[].PrivateIpAddress --output
+                    text) \n"
+                  - "echo \"${IP}:54321\" >> \"$flatfile\" \n "
+                  - "done \n"
+    Properties:
+      ImageId:
+        Fn::FindInMap:
+        - AWSRegionArch2AMI
+        - Ref: AWS::Region
+        - Fn::FindInMap:
+          - AWSInstanceType2Arch
+          - Ref: InstanceType
+          - Arch
+      SecurityGroups:
+      - Ref: H2OSecurityGroup
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      IamInstanceProfile:
+        Ref: TemplateInstanceProfile
+      AssociatePublicIpAddress: 'true'
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - "#cloud-boothook"
+            - "#!/bin/bash -xe\n"
+            - "# Install the sample application\n"
+            - 'cfn-init -v '
+            - "    --stack "
+            - Ref: AWS::StackId
+            - "    --resource H2OLaunchConfig "
+            - "    --region "
+            - Ref: AWS::Region
+            - "\n"
+            - "# Create the FlatFile \n"
+            - "sh /opt/h2oai/create_flatfile.sh \n"
+            - "sh /opt/h2oai/install_h2o.sh \n"
+            - "touch /opt/h2oai/h2o.err \n"
+            - "touch /opt/h2oai/check.err \n"
+            - "ls /opt/h2oai -ls > /opt/h2oai/check.err \n"
+            - "# Start H2O Cloud\n"
+            - "# Use 90% of RAM for H2O. \n"
+            - "memTotalKb=`cat /proc/meminfo | grep MemTotal | sed 's/MemTotal:[ \t]*//'
+              | sed 's/ kB//'` \n "
+            - "memTotalMb=$(($memTotalKb / 1024)) \n "
+            - "tmp=$(($memTotalMb * 90))  \n"
+            - "xmxMb=$(($tmp / 100))  \n"
+            - "sudo nohup java -Xmx${xmxMb}m -jar /opt/h2oai/h2o.jar -flatfile /opt/h2oai/flatfile.txt
+              1> /dev/null 2> /opt/h2oai/h2o.err & \n"
+            - "# Signal copletion\n"
+            - 'cfn-signal -e $? '
+            - "    --stack "
+            - Ref: AWS::StackId
+            - "    --resource H2OFleet "
+            - "    --region "
+            - Ref: AWS::Region
+            - "\n"
+  H2OSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp:
+          Ref: SSHLocation
+      - IpProtocol: tcp
+        FromPort: '54322'
+        ToPort: '54322'
+        CidrIp:
+          Ref: SSHLocation
+      - IpProtocol: tcp
+        FromPort: '54321'
+        ToPort: '54321'
+        CidrIp:
+          Ref: SSHLocation
+      VpcId:
+        Ref: VPC
+  TemplateRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: h2oPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - autoscaling:Describe*
+            - ec2:DescribeInstances
+            Resource: "*"
+  TemplateInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - Ref: TemplateRole
+
+Outputs:
+  Autoscaling:
+    Description: Autoscaling id
+    Value: !Ref H2OFleet

@@ -1,0 +1,47 @@
+{% extends "main.html" %}
+{% block content %}
+
+    <div class="main-content">
+        <form id="contact" class="form-validation" role="form" action="{{ url_for('register')}}" method="POST" onsubmit="return checkForm(this);">
+          {{ form.csrf_token }}
+          {{ form.hidden_tag() }}
+            <div name="fullname" class="form-row form-input-name-row">
+              
+                <label for="fullname">
+                    <span>Cluster Name</span>
+                    {{ form.stackName }}
+                </label>
+
+
+                <span id='span' class="error">Required</span>
+                <span class="form-valid-data-sign"><i class="fa fa-check"></i></span>
+                <span class="form-invalid-data-sign"><i class="fa fa-close"></i></span>
+                <span class="form-invalid-data-info"></span>
+
+            </div>
+
+            <div name="phone" class="form-row form-input-phone-row">
+                <label>
+                    <span>Number of Instances</span>
+                    {{ form.vmCount }}
+                </label>
+                <span class="error">Required</span>
+
+                <span class="form-valid-data-sign"><i class="fa fa-check"></i></span>
+                <span class="form-invalid-data-sign"><i class="fa fa-close"></i></span>
+                <span class="form-invalid-data-info"></span>
+
+            </div>
+
+            <div class="form-row" id="contact_submit">
+
+                <button type="submit">Submit</button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+{% endblock %}

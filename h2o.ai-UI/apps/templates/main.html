@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>h2o.ai in AWS</title>
+
+	<link rel="stylesheet" href="static/css/demo.css">
+	<link rel="stylesheet" href="static/css/form-validation.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+
+</head>
+ <body>
+    {% block content %} {% endblock %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+
+<script>
+
+    $(document).ready(function() {
+
+      // Name can't be blank
+      $('#fullname').on('input', function() {
+      	var input=$(this);
+      	var is_name=input.val();
+        var errorField = $('.form-input-name-row');
+      	if(is_name){errorField.removeClass('form-invalid-data invalid').addClass('form-valid-data valid');}
+      	else{errorField.addClass('form-invalid-data valid').removeClass('form-valid-data invalid')}
+      })
+
+      // Phone number
+      $('#phone').on('input', function() {
+        var input=$(this);
+        var phoneno = /^\d{10}$/;
+        var is_phone=phoneno.test(input.val());
+        var errorPhone = $('.form-input-phone-row');
+        if(is_phone){errorPhone.removeClass('form-invalid-data invalid').addClass('form-valid-data valid');}
+        else{errorPhone.addClass('form-invalid-data valid').removeClass('form-valid-data invalid')}
+      })
+
+
+      $("#contact_submit button").click(function(event){
+      });
+    });
+
+</script>
+
+<script type="text/javascript">
+
+  function checkForm(form)
+
+  {
+    if( form.fullname.value == "" && form.phone.value == "" ) {
+      // Here is how to show an error message next to a form field
+      var errorField = $('.form-input-name-row');
+      errorField.addClass('form-invalid-data');
+      errorField.find('.form-invalid-data-info').text('Please enter your name');
+
+      var errorPhone = $('.form-input-phone-row');
+      errorPhone.addClass('form-invalid-data');
+      errorPhone.find('.form-invalid-data-info').text('Please enter your phone');
+
+
+        return false;
+    }
+    else if ( form.phone.value == ""){
+
+
+        // Here is how to show an error message next to a form field
+
+        var errorPhone = $('.form-input-phone-row');
+        errorPhone.addClass('form-invalid-data');
+        errorPhone.find('.form-invalid-data-info').text('Please enter your phone');
+
+
+          return false;
+    }
+    else if ( form.fullname.value == ""){
+
+
+        // Here is how to show an error message next to a form field
+
+        var errorEmail = $('.form-input-email-row');
+        errorEmail.addClass('form-invalid-data');
+        errorEmail.find('.form-invalid-data-info').text('Please enter your email');
+
+          return false;
+    }
+
+  }
+</script>
+
+</body>
+
+</html>
